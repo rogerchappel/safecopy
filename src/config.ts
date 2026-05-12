@@ -16,7 +16,12 @@ export function findConfig(root: string, explicitPath?: string): string | undefi
 
 export function loadConfig(root: string, explicitPath?: string): SafeCopyConfig {
   const configPath = findConfig(root, explicitPath);
-  if (!configPath) return structuredClone(DEFAULT_CONFIG);
+  if (!configPath) return {
+    include: [...DEFAULT_CONFIG.include],
+    deny: [...DEFAULT_CONFIG.deny],
+    maxFileBytes: DEFAULT_CONFIG.maxFileBytes,
+    redact: DEFAULT_CONFIG.redact.map((rule) => ({ ...rule }))
+  };
   const raw = JSON.parse(readFileSync(configPath, "utf8")) as Partial<SafeCopyConfig>;
   return {
     include: raw.include ?? DEFAULT_CONFIG.include,
