@@ -1,0 +1,52 @@
+{
+  "name": "safecopy",
+  "version": "0.1.0",
+  "description": "Local-first CLI for deterministic safe project context bundles.",
+  "type": "module",
+  "bin": {
+    "safecopy": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test dist/**/*.test.js",
+    "smoke": "npm run build && bash scripts/smoke.sh",
+    "package:smoke": "npm pack --dry-run",
+    "release:check": "npm test && npm run check && npm run build && npm run smoke && npm run package:smoke"
+  },
+  "keywords": [
+    "cli",
+    "archive",
+    "redaction",
+    "context",
+    "local-first",
+    "safety"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogerchappel/safecopy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rogerchappel/safecopy/issues"
+  },
+  "homepage": "https://github.com/rogerchappel/safecopy#readme",
+  "author": "Roger Chappel",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "latest",
+    "typescript": "latest"
+  }
+}
