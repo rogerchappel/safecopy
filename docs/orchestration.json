@@ -1,0 +1,8 @@
+{
+  "repo": "safecopy",
+  "owner": "oss-factory-20260512-evening",
+  "workspace": "/Users/roger/Developer/my-opensource/safecopy",
+  "github": "rogerchappel/safecopy",
+  "waves": ["baseline", "core-modules", "fixtures-tests", "cli-smoke-validation", "docs-metadata", "publish-protect"],
+  "quality_bar": {"local_first": true, "fixture_tests": true, "real_cli_smoke": true, "atomic_commits_target": "30-50"}
+}
