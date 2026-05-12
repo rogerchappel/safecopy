@@ -4,14 +4,14 @@
   "description": "Local-first CLI for deterministic safe project context bundles.",
   "type": "module",
   "bin": {
-    "safecopy": "./dist/cli.js"
+    "safecopy": "./dist/src/cli.js"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
     }
   },
   "files": [
