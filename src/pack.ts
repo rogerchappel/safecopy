@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { createManifest, manifestMarkdown, sha256 } from "./manifest.js";
@@ -45,10 +45,20 @@ export function pack(options: PackOptions): PackResult {
 
   if (mode === "tgz") {
     if (options.force) rmSync(outputPath, { force: true });
-    const result = spawnSync("tar", ["--sort", "name", "--mtime", "1970-01-01", "-czf", outputPath, "-C", staging, "."], { encoding: "utf8" });
+    touchTree(staging, new Date(0));
+    const result = spawnSync("tar", ["-czf", outputPath, "-C", staging, "."], { encoding: "utf8", env: { ...process.env, COPYFILE_DISABLE: "1" } });
     rmSync(staging, { recursive: true, force: true });
     if (result.status !== 0) throw new Error(`tar failed: ${result.stderr || result.stdout}`);
   }
 
   return { plan, manifest, outputPath };
+}
+
+function touchTree(path: string, date: Date): void {
+  for (const entry of readdirSync(path, { withFileTypes: true })) {
+    const child = resolve(path, entry.name);
+    if (entry.isDirectory()) touchTree(child, date);
+    utimesSync(child, date, date);
+  }
+  utimesSync(path, date, date);
 }
