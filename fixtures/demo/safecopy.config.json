@@ -1,0 +1,12 @@
+{
+  "include": ["**/*", ".gitignore"],
+  "deny": ["private/**"],
+  "maxFileBytes": 2048,
+  "redact": [
+    {
+      "name": "demo-word",
+      "pattern": "demo-secret-value",
+      "placeholder": "[REDACTED:DEMO]"
+    }
+  ]
+}
