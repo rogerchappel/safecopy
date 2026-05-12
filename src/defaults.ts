@@ -23,8 +23,9 @@ export const BUILT_IN_DENY = [
 export const DEFAULT_REDACTIONS = [
   {
     name: "generic-secret-assignment",
-    pattern: "(?i)(api[_-]?key|token|secret|password)(\\s*[=:]\\s*)['\"]?([^'\"\\s]+)['\"]?",
-    placeholder: "$1$2[REDACTED:$1]"
+    pattern: "(api[_-]?key|token|secret|password)(\\s*[=:]\\s*)['\"]?([^'\"\\s]+)['\"]?",
+    placeholder: "$1$2[REDACTED:$1]",
+    flags: "gi"
   },
   {
     name: "aws-access-key",
