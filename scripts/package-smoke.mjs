@@ -38,4 +38,25 @@ if (missing.length) {
   for (const file of missing) console.error(`- ${file}`);
   process.exit(1);
 }
-console.log(`Package tarball includes ${expected.size} declared entrypoint(s).`);
+
+const requiredReleaseFiles = [
+  'README.md',
+  'LICENSE',
+  'SECURITY.md',
+  'SAFETY.md',
+  'CHANGELOG.md',
+  'CONTRIBUTING.md',
+  'docs/README.md',
+  'examples/README.md',
+  'examples/safecopy.config.json'
+];
+const missingReleaseFiles = requiredReleaseFiles.filter((file) => !included.has(file));
+if (missingReleaseFiles.length) {
+  console.error('Package tarball is missing release support files:');
+  for (const file of missingReleaseFiles) console.error(`- ${file}`);
+  process.exit(1);
+}
+
+console.log(
+  `Package tarball includes ${expected.size} declared entrypoint(s) and ${requiredReleaseFiles.length} release support file(s).`
+);
