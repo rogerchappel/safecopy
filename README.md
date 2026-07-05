@@ -1,6 +1,6 @@
 # safecopy
 
-Deterministic, local-first project context bundles that copy the useful bits and leave the dragon eggs behind. 🐉
+Deterministic, local-first project context bundles that copy the useful bits and leave sensitive files behind.
 
 `safecopy` is a TypeScript CLI for preparing source bundles for agents, reviewers, support tickets, or bug reports. It plans what will be copied, applies deny globs and `.gitignore`, redacts secret-looking text, writes manifests, and never uploads anything.
 
@@ -85,8 +85,13 @@ npm test
 npm run check
 npm run build
 npm run smoke
+npm run package:smoke
+npm run release:check
 bash scripts/validate.sh
 ```
+
+`npm run release:check` runs the test suite, type check, build, CLI smoke, and
+package smoke gate used before release promotion.
 
 ## Philosophy
 
