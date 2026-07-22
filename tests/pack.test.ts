@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
@@ -30,6 +30,34 @@ test("pack creates inspectable tgz archives", () => {
     pack({ root: fixture, out, force: true });
     const manifest = inspectBundle(out);
     assert.ok(manifest.files.some((file) => file.path === "README.md"));
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("directory repacks refuse existing outputs unless force replaces them", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "safecopy-"));
+  try {
+    const root = join(tmp, "project");
+    const out = join(tmp, "bundle");
+    mkdirSync(root);
+    writeFileSync(join(root, "sensitive.txt"), "secret-old\n");
+    writeFileSync(join(root, "current.txt"), "current\n");
+    const configPath = join(root, "safecopy.config.json");
+    writeFileSync(configPath, `${JSON.stringify({ include: ["sensitive.txt"] })}\n`);
+
+    pack({ root, out, mode: "directory" });
+    assert.equal(readFileSync(join(out, "sensitive.txt"), "utf8"), "secret-old\n");
+
+    writeFileSync(configPath, `${JSON.stringify({ include: ["current.txt"] })}\n`);
+    assert.throws(
+      () => pack({ root, out, mode: "directory" }),
+      /Output already exists: .* Use --force to replace it\./
+    );
+
+    pack({ root, out, mode: "directory", force: true });
+    assert.equal(existsSync(join(out, "sensitive.txt")), false);
+    assert.equal(readFileSync(join(out, "current.txt"), "utf8"), "current\n");
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }

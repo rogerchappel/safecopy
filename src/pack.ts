@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, readdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { createManifest, manifestMarkdown, sha256 } from "./manifest.js";
@@ -25,6 +25,9 @@ export function pack(options: PackOptions): PackResult {
   const mode = options.mode ?? (options.out.endsWith(".tgz") || options.out.endsWith(".tar.gz") ? "tgz" : "directory");
   const outputPath = resolve(options.out);
   const staging = mode === "directory" ? outputPath : `${outputPath}.staging`;
+  if (!options.force && existsSync(staging)) {
+    throw new Error(`Output already exists: ${staging}. Use --force to replace it.`);
+  }
   if (options.force) rmSync(staging, { recursive: true, force: true });
   mkdirSync(staging, { recursive: true });
 
