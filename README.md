@@ -29,8 +29,12 @@ safecopy plan --root ./my-project
 Create an archive:
 
 ```sh
-safecopy pack --root ./my-project --out ./my-project.safe.tgz --force
+safecopy pack --root ./my-project --out ./my-project.safe.tgz
 ```
+
+`pack` refuses to overwrite an existing archive or directory. Pass `--force`
+to replace the target; archive replacements are installed only after the new
+archive is created successfully.
 
 Inspect a bundle later:
 
