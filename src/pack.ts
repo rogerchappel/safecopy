@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { createManifest, manifestMarkdown, sha256 } from "./manifest.js";
@@ -25,10 +25,15 @@ export function pack(options: PackOptions): PackResult {
   const mode = options.mode ?? (options.out.endsWith(".tgz") || options.out.endsWith(".tar.gz") ? "tgz" : "directory");
   const outputPath = resolve(options.out);
   const staging = mode === "directory" ? outputPath : `${outputPath}.staging`;
+  const archiveStaging = `${outputPath}.staging-archive`;
+  if (!options.force && existsSync(outputPath)) {
+    throw new Error(`Output already exists: ${outputPath}. Use --force to replace it.`);
+  }
   if (!options.force && existsSync(staging)) {
     throw new Error(`Output already exists: ${staging}. Use --force to replace it.`);
   }
   if (options.force) rmSync(staging, { recursive: true, force: true });
+  if (mode === "tgz") rmSync(archiveStaging, { force: true });
   mkdirSync(staging, { recursive: true });
 
   const files: FileManifestEntry[] = [];
@@ -47,11 +52,16 @@ export function pack(options: PackOptions): PackResult {
   writeFileSync(resolve(staging, "safecopy-manifest.md"), manifestMarkdown(manifest));
 
   if (mode === "tgz") {
-    if (options.force) rmSync(outputPath, { force: true });
-    touchTree(staging, new Date(0));
-    const result = spawnSync("tar", ["-czf", outputPath, "-C", staging, "."], { encoding: "utf8", env: { ...process.env, COPYFILE_DISABLE: "1" } });
-    rmSync(staging, { recursive: true, force: true });
-    if (result.status !== 0) throw new Error(`tar failed: ${result.stderr || result.stdout}`);
+    try {
+      touchTree(staging, new Date(0));
+      const result = spawnSync("tar", ["-czf", archiveStaging, "-C", staging, "."], { encoding: "utf8", env: { ...process.env, COPYFILE_DISABLE: "1" } });
+      if (result.status !== 0) throw new Error(`tar failed: ${result.stderr || result.stdout}`);
+      if (options.force) rmSync(outputPath, { force: true });
+      renameSync(archiveStaging, outputPath);
+    } finally {
+      rmSync(staging, { recursive: true, force: true });
+      rmSync(archiveStaging, { force: true });
+    }
   }
 
   return { plan, manifest, outputPath };
