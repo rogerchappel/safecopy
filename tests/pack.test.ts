@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
@@ -59,6 +59,50 @@ test("directory repacks refuse existing outputs unless force replaces them", () 
     assert.equal(existsSync(join(out, "sensitive.txt")), false);
     assert.equal(readFileSync(join(out, "current.txt"), "utf8"), "current\n");
   } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("tgz repacks refuse existing outputs unless force replaces them", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "safecopy-"));
+  try {
+    const out = join(tmp, "bundle.tgz");
+    writeFileSync(out, "keep-existing\n");
+
+    assert.throws(
+      () => pack({ root: fixture, out }),
+      /Output already exists: .* Use --force to replace it\./
+    );
+    assert.equal(readFileSync(out, "utf8"), "keep-existing\n");
+    assert.equal(existsSync(`${out}.staging`), false);
+
+    pack({ root: fixture, out, force: true });
+    assert.ok(inspectBundle(out).files.some((file) => file.path === "README.md"));
+    assert.equal(existsSync(`${out}.staging`), false);
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("tgz failures clean staging without altering an existing output", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "safecopy-"));
+  const originalPath = process.env.PATH;
+  try {
+    const out = join(tmp, "bundle.tgz");
+    const bin = join(tmp, "bin");
+    mkdirSync(bin);
+    const tar = join(bin, "tar");
+    writeFileSync(tar, "#!/bin/sh\nexit 7\n");
+    chmodSync(tar, 0o755);
+    writeFileSync(out, "keep-existing\n");
+    process.env.PATH = `${bin}:${originalPath ?? ""}`;
+
+    assert.throws(() => pack({ root: fixture, out, force: true }), /tar failed/);
+    assert.equal(readFileSync(out, "utf8"), "keep-existing\n");
+    assert.equal(existsSync(`${out}.staging`), false);
+    assert.equal(existsSync(`${out}.staging-archive`), false);
+  } finally {
+    process.env.PATH = originalPath;
     rmSync(tmp, { recursive: true, force: true });
   }
 });
