@@ -63,7 +63,7 @@ function help(): void {
 
 Usage:
   safecopy plan [--root .] [--config safecopy.config.json] [--json]
-  safecopy pack [--root .] --out bundle.tgz [--force] [--directory]
+  safecopy pack [--root .] --out bundle.tgz [--force (replace existing output)] [--directory]
   safecopy inspect --bundle bundle.tgz [--json]
 
 No telemetry. No upload. Local files only.`);
