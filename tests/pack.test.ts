@@ -63,6 +63,25 @@ test("directory repacks refuse existing outputs unless force replaces them", () 
   }
 });
 
+test("forced directory repacks exclude an output inside the project", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "safecopy-"));
+  try {
+    const root = join(tmp, "project");
+    const out = join(root, "bundle");
+    mkdirSync(root);
+    writeFileSync(join(root, "current.txt"), "current\n");
+
+    pack({ root, out, mode: "directory" });
+    pack({ root, out, mode: "directory", force: true });
+
+    const manifest = inspectBundle(out);
+    assert.ok(manifest.files.some((file) => file.path === "current.txt"));
+    assert.equal(manifest.files.some((file) => file.path.startsWith("bundle/")), false);
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
 test("tgz repacks refuse existing outputs unless force replaces them", () => {
   const tmp = mkdtempSync(join(tmpdir(), "safecopy-"));
   try {

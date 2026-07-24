@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, utimesSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, relative, resolve, sep } from "node:path";
 import { spawnSync } from "node:child_process";
 import { createManifest, manifestMarkdown, sha256 } from "./manifest.js";
 import { createPlan } from "./planner.js";
@@ -21,9 +21,13 @@ export interface PackResult {
 }
 
 export function pack(options: PackOptions): PackResult {
-  const plan = createPlan({ root: options.root, configPath: options.configPath });
+  const root = resolve(options.root);
   const mode = options.mode ?? (options.out.endsWith(".tgz") || options.out.endsWith(".tar.gz") ? "tgz" : "directory");
   const outputPath = resolve(options.out);
+  const outputRelative = relative(root, outputPath);
+  const outputInsideRoot = outputRelative !== "" && outputRelative !== ".." && !outputRelative.startsWith(`..${sep}`);
+  const exclude = outputInsideRoot ? [outputRelative.replaceAll(sep, "/"), `${outputRelative.replaceAll(sep, "/")}/**`] : [];
+  const plan = createPlan({ root, configPath: options.configPath, exclude });
   const staging = mode === "directory" ? outputPath : `${outputPath}.staging`;
   const archiveStaging = `${outputPath}.staging-archive`;
   if (!options.force && existsSync(outputPath)) {
