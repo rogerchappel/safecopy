@@ -17,6 +17,7 @@ export interface SafeCopyConfig {
 export interface PlanOptions {
   root: string;
   configPath?: string;
+  exclude?: string[];
 }
 
 export interface PlannedFile {
