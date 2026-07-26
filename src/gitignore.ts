@@ -16,8 +16,13 @@ export function loadGitignorePatterns(root: string): GitignorePattern[] {
     .filter((line) => line.length > 0 && !line.startsWith("#"))
     .map((line) => {
       const negated = line.startsWith("!");
-      const clean = (negated ? line.slice(1) : line).replace(/^\//, "");
-      const pattern = clean.endsWith("/") ? `${clean}**` : !clean.includes("/") ? `**/${clean}` : clean;
+      const rule = negated ? line.slice(1) : line;
+      const anchored = rule.startsWith("/");
+      const clean = rule.replace(/^\//, "");
+      const directory = clean.endsWith("/");
+      const unanchored = !anchored && !clean.slice(0, -1).includes("/");
+      const prefix = unanchored ? "**/" : "";
+      const pattern = directory ? `${prefix}${clean}**` : `${prefix}${clean}`;
       return { pattern, negated };
     });
 }
