@@ -74,6 +74,13 @@ Create `safecopy.config.json` at the project root:
 
 Project deny patterns are added to the built-in safety defaults. `.gitignore` patterns are evaluated in order, including `!` rules that re-include a previously ignored file. Re-inclusion never overrides built-in or configured safety denies.
 
+Configuration is validated when it is loaded. The root must be a JSON object;
+`include` and `deny` must be arrays of strings; `maxFileBytes` must be a finite,
+non-negative number; and `redact` must be an array of rules with string
+`name`, `pattern`, and `placeholder` fields (plus optional string `flags`).
+Patterns and flags must form a valid JavaScript regular expression. Invalid
+configuration exits with an error naming the config path and failing field.
+
 ## Outputs
 
 Every bundle includes:
