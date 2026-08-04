@@ -1,5 +1,5 @@
 export function normalizePath(path: string): string {
-  return path.replace(/\\\\/g, "/").replace(/^\.\//, "");
+  return path.replace(/\\/g, "/").replace(/^\.\//, "");
 }
 
 function escapeRegex(value: string): string {
