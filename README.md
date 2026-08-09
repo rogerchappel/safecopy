@@ -111,7 +111,15 @@ bash scripts/validate.sh
 ```
 
 `npm run release:check` runs the test suite, type check, build, CLI smoke, and
-package smoke gate used before release promotion.
+package and release-workflow smoke gates used before release promotion.
+
+## Releases
+
+A `v*.*.*` tag runs the release checks, creates one npm tarball, and publishes
+that exact artifact to npm using trusted publishing. The workflow then attaches
+the same tarball to the matching GitHub release. The pull request release dry
+run likewise packs once and executes `npm publish <tarball> --dry-run --access
+public`, so package publication is checked before a tag is created.
 
 ## Philosophy
 
