@@ -8,19 +8,42 @@ interface ParsedArgs {
   values: Record<string, string | boolean>;
 }
 
+const valueOptions = new Set(["root", "config", "out", "bundle", "path"]);
+const booleanOptions = new Set(["json", "force", "directory", "help"]);
+const commandOptions: Record<string, Set<string>> = {
+  plan: new Set(["root", "config", "json", "help"]),
+  pack: new Set(["root", "config", "out", "force", "directory", "help"]),
+  inspect: new Set(["bundle", "path", "json", "help"]),
+  help: new Set()
+};
+
 function parseArgs(argv: string[]): ParsedArgs {
+  if (argv.length === 0) return { values: {} };
+  if (argv[0] === "--help") {
+    if (argv.length > 1) throw new Error(`Unexpected argument: ${argv[1]}`);
+    return { command: "help", values: {} };
+  }
+
   const [command, ...rest] = argv;
+  const allowed = commandOptions[command];
+  if (!allowed) throw new Error(`Unknown command: ${command}`);
   const values: Record<string, string | boolean> = {};
   for (let i = 0; i < rest.length; i += 1) {
     const arg = rest[i];
-    if (!arg.startsWith("--")) continue;
+    if (!arg.startsWith("--")) throw new Error(`Unexpected argument: ${arg}`);
     const key = arg.slice(2);
+    if (!allowed.has(key)) throw new Error(`Unknown option for ${command}: --${key}`);
+    if (key in values) throw new Error(`Option may only be supplied once: --${key}`);
+
     const next = rest[i + 1];
-    if (!next || next.startsWith("--")) values[key] = true;
-    else {
+    if (valueOptions.has(key)) {
+      if (!next || next.startsWith("--")) throw new Error(`Option --${key} requires a value`);
       values[key] = next;
       i += 1;
+      continue;
     }
+    if (!booleanOptions.has(key)) throw new Error(`Unknown option: --${key}`);
+    values[key] = true;
   }
   return { command, values };
 }
@@ -63,8 +86,11 @@ function help(): void {
 
 Usage:
   safecopy plan [--root .] [--config safecopy.config.json] [--json]
-  safecopy pack [--root .] --out bundle.tgz [--force (replace existing output)] [--directory]
-  safecopy inspect --bundle bundle.tgz [--json]
+  safecopy pack [--root .] [--config safecopy.config.json] [--out bundle.tgz] [--force] [--directory]
+  safecopy inspect (--bundle bundle.tgz | --path bundle.tgz) [--json]
+  safecopy help
+
+Every command also accepts --help. Boolean flags do not take values.
 
 No telemetry. No upload. Local files only.`);
 }
