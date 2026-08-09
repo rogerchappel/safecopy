@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Publish the exact packed artifact to npm and attach it to the GitHub release.
+- Exercise npm publication in the pull request release dry run.
+
 ## 0.1.0
 
 - Added `safecopy plan`, `safecopy pack`, and `safecopy inspect`.
