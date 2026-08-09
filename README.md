@@ -32,6 +32,12 @@ Create an archive:
 safecopy pack --root ./my-project --out ./my-project.safe.tgz
 ```
 
+`--out` is optional and defaults to `safecopy-bundle.tgz`. Options that take
+values (`--root`, `--config`, `--out`, `--bundle`, and `--path`) require the
+value immediately after the option. Boolean flags such as `--json`, `--force`,
+and `--directory` do not take values. Unknown options and positional arguments
+are rejected.
+
 `pack` refuses to overwrite an existing archive or directory. Pass `--force`
 to replace the target; archive replacements are installed only after the new
 archive is created successfully.
@@ -41,6 +47,9 @@ Inspect a bundle later:
 ```sh
 safecopy inspect --bundle ./my-project.safe.tgz
 ```
+
+`inspect --path ./my-project.safe.tgz` is an equivalent form. Run `safecopy
+help`, `safecopy --help`, or any command with `--help` to see accepted forms.
 
 ## What gets protected
 
