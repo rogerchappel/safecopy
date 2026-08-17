@@ -6,17 +6,26 @@ Deterministic, local-first project context bundles that copy the useful bits and
 
 ## Install
 
+The `safecopy` package is not published to the npm registry yet. Install the
+current CLI from its GitHub source:
+
 ```sh
-npm install -g safecopy
+git clone https://github.com/rogerchappel/safecopy.git
+cd safecopy
+npm ci
+npm run build
+npm install --global .
+safecopy help
 ```
 
-For local development:
+To run it only inside the checkout instead of installing the command globally:
 
 ```sh
-npm install
-npm run build
 node dist/src/cli.js help
 ```
+
+After the first npm release, `npm install --global safecopy` will become the
+short registry installation path. Until then, that command returns an npm 404.
 
 ## Quick start
 
@@ -105,13 +114,16 @@ npm test
 npm run check
 npm run build
 npm run smoke
+npm run install:smoke
 npm run package:smoke
 npm run release:check
 bash scripts/validate.sh
 ```
 
-`npm run release:check` runs the test suite, type check, build, CLI smoke, and
-package and release-workflow smoke gates used before release promotion.
+`npm run release:check` runs the test suite, type check, build, CLI smoke,
+packed-artifact installation smoke, and package and release-workflow gates used
+before release promotion. The install smoke puts the packed artifact in an
+isolated npm prefix and verifies that its `safecopy help` command runs.
 
 ## Releases
 
@@ -119,7 +131,10 @@ A `v*.*.*` tag runs the release checks, creates one npm tarball, and publishes
 that exact artifact to npm using trusted publishing. The workflow then attaches
 the same tarball to the matching GitHub release. The pull request release dry
 run likewise packs once and executes `npm publish <tarball> --dry-run --access
-public`, so package publication is checked before a tag is created.
+public`, so package publication is checked before a tag is created. Only after
+that first successful npm publication is `npm install --global safecopy` a
+valid registry installation command; the GitHub source path above is the
+supported installation path today.
 
 ## Philosophy
 

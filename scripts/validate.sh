@@ -5,6 +5,7 @@ npm test
 npm run check
 npm run build
 npm run smoke
+npm run install:smoke
 npm run package:smoke
 
 if command -v agent-qc >/dev/null 2>&1; then
