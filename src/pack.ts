@@ -30,6 +30,7 @@ export function pack(options: PackOptions): PackResult {
   const plan = createPlan({ root, configPath: options.configPath, exclude });
   const staging = mode === "directory" ? outputPath : `${outputPath}.staging`;
   const archiveStaging = `${outputPath}.staging-archive`;
+  const tarStaging = `${outputPath}.staging-tar`;
   if (!options.force && existsSync(outputPath)) {
     throw new Error(`Output already exists: ${outputPath}. Use --force to replace it.`);
   }
@@ -37,7 +38,10 @@ export function pack(options: PackOptions): PackResult {
     throw new Error(`Output already exists: ${staging}. Use --force to replace it.`);
   }
   if (options.force) rmSync(staging, { recursive: true, force: true });
-  if (mode === "tgz") rmSync(archiveStaging, { force: true });
+  if (mode === "tgz") {
+    rmSync(archiveStaging, { force: true });
+    rmSync(tarStaging, { force: true });
+  }
   mkdirSync(staging, { recursive: true });
 
   const files: FileManifestEntry[] = [];
@@ -58,13 +62,20 @@ export function pack(options: PackOptions): PackResult {
   if (mode === "tgz") {
     try {
       touchTree(staging, new Date(0));
-      const result = spawnSync("tar", ["-czf", archiveStaging, "-C", staging, "."], { encoding: "utf8", env: { ...process.env, COPYFILE_DISABLE: "1" } });
-      if (result.status !== 0) throw new Error(`tar failed: ${result.stderr || result.stdout}`);
+      const tar = spawnSync("tar", ["--format=ustar", "--uid", "0", "--gid", "0", "--uname", "root", "--gname", "root", "-cf", tarStaging, "-C", staging, "."], {
+        encoding: "utf8",
+        env: { ...process.env, COPYFILE_DISABLE: "1" }
+      });
+      if (tar.status !== 0) throw new Error(`tar failed: ${tar.stderr || tar.stdout}`);
+      const gzip = spawnSync("gzip", ["-n", "-c", tarStaging], { encoding: null, maxBuffer: 1024 * 1024 * 1024 });
+      if (gzip.status !== 0) throw new Error(`gzip failed: ${gzip.stderr?.toString() || gzip.stdout?.toString()}`);
+      writeFileSync(archiveStaging, gzip.stdout);
       if (options.force) rmSync(outputPath, { force: true });
       renameSync(archiveStaging, outputPath);
     } finally {
       rmSync(staging, { recursive: true, force: true });
       rmSync(archiveStaging, { force: true });
+      rmSync(tarStaging, { force: true });
     }
   }
 
