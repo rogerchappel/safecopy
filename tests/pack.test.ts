@@ -35,6 +35,19 @@ test("pack creates inspectable tgz archives", () => {
   }
 });
 
+test("pack creates byte-identical tgz archives for the same tree", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "safecopy-"));
+  try {
+    const first = join(tmp, "first.tgz");
+    const second = join(tmp, "second.tgz");
+    pack({ root: fixture, out: first, force: true });
+    pack({ root: fixture, out: second, force: true });
+    assert.deepEqual(readFileSync(second), readFileSync(first));
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
 test("directory repacks refuse existing outputs unless force replaces them", () => {
   const tmp = mkdtempSync(join(tmpdir(), "safecopy-"));
   try {
