@@ -62,7 +62,11 @@ export function pack(options: PackOptions): PackResult {
   if (mode === "tgz") {
     try {
       touchTree(staging, new Date(0));
-      const tar = spawnSync("tar", ["--format=ustar", "--uid", "0", "--gid", "0", "--uname", "root", "--gname", "root", "-cf", tarStaging, "-C", staging, "."], {
+      const tarVersion = spawnSync("tar", ["--version"], { encoding: "utf8" });
+      const ownerArgs = tarVersion.stdout.includes("bsdtar")
+        ? ["--uid", "0", "--gid", "0", "--uname", "root", "--gname", "root"]
+        : ["--owner", "0", "--group", "0", "--numeric-owner"];
+      const tar = spawnSync("tar", ["--format=ustar", ...ownerArgs, "-cf", tarStaging, "-C", staging, "."], {
         encoding: "utf8",
         env: { ...process.env, COPYFILE_DISABLE: "1" }
       });
