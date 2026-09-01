@@ -131,7 +131,10 @@ A `v*.*.*` tag runs the release checks, creates one npm tarball, and publishes
 that exact artifact to npm using trusted publishing. The workflow then attaches
 the same tarball to the matching GitHub release. The pull request release dry
 run likewise packs once and executes `npm publish <tarball> --dry-run --access
-public`, so package publication is checked before a tag is created. Only after
+public`, so package publication is checked before a tag is created. Changes to
+an executable gate reached by `release:check` also trigger that dry run; the
+workflow smoke check keeps its path filter aligned with the package scripts.
+Only after
 that first successful npm publication is `npm install --global safecopy` a
 valid registry installation command; the GitHub source path above is the
 supported installation path today.
