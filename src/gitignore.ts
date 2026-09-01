@@ -29,9 +29,11 @@ export function loadGitignorePatterns(root: string): GitignorePattern[] {
 
 export function ignoredByGitignore(path: string, patterns: GitignorePattern[]): string | undefined {
   const normalized = normalizePath(path);
+  const candidates = normalized.split("/").map((_, index, parts) => parts.slice(0, index + 1).join("/"));
   let ignoredBy: string | undefined;
   for (const entry of patterns) {
-    if (!globToRegExp(entry.pattern).test(normalized)) continue;
+    const matcher = globToRegExp(entry.pattern);
+    if (!candidates.some((candidate) => matcher.test(candidate))) continue;
     ignoredBy = entry.negated ? undefined : entry.pattern;
   }
   return ignoredBy;
