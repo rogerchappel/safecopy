@@ -7,6 +7,10 @@ on:
       - releasebox.config.json
       - package.json
       - package-lock.json
+      - scripts/smoke.sh
+      - scripts/install-smoke.sh
+      - scripts/package-smoke.mjs
+      - scripts/release-workflow-smoke.mjs
       - .github/workflows/release*.yml
 
 permissions:
