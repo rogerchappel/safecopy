@@ -90,7 +90,7 @@ Create `safecopy.config.json` at the project root:
 }
 ```
 
-Project deny patterns are added to the built-in safety defaults. `.gitignore` patterns are evaluated in order, including `!` rules that re-include a previously ignored file. Re-inclusion never overrides built-in or configured safety denies.
+Project deny patterns are added to the built-in safety defaults. Simple `.gitignore` patterns are evaluated in order, including slashless file-or-directory names at any depth and `!` rules that re-include a previously ignored file. Re-inclusion never overrides built-in or configured safety denies; complex negation semantics are not fully implemented.
 
 Configuration is validated when it is loaded. The root must be a JSON object;
 `include` and `deny` must be arrays of strings; `maxFileBytes` must be a finite,
