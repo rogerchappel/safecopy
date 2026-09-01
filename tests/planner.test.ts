@@ -6,6 +6,7 @@ import test from "node:test";
 import { createPlan } from "../src/planner.js";
 
 const fixture = resolve("fixtures/demo");
+const slashlessDirectoryFixture = resolve("fixtures/gitignore-slashless-directory");
 
 test("planner includes safe files and skips denied files", () => {
   const plan = createPlan({ root: fixture });
@@ -55,6 +56,15 @@ test("planner applies unanchored gitignore directory rules at every depth", () =
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+test("planner treats slashless gitignore matches as files or directories", () => {
+  const plan = createPlan({ root: slashlessDirectoryFixture });
+  const skipped = new Map(plan.skipped.map((file) => [file.path, file.reason]));
+
+  assert.match(skipped.get("vendor/data.txt") ?? "", /denied by \*\*\/vendor/);
+  assert.match(skipped.get("nested/vendor/data.txt") ?? "", /denied by \*\*\/vendor/);
+  assert.match(skipped.get("plain/vendor") ?? "", /denied by \*\*\/vendor/);
 });
 
 test("planner keeps anchored directory rules at the repository root", () => {
