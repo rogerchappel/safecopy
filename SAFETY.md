@@ -13,7 +13,7 @@
 
 - Redaction is pattern-based and best-effort.
 - Binary files are copied or skipped; they are not deeply inspected.
-- Complex `.gitignore` negation rules are intentionally not fully implemented yet.
+- Simple `.gitignore` file and directory patterns are supported, including slashless names at any depth; complex negation rules are intentionally not fully implemented.
 
 ## Recommended workflow
 
