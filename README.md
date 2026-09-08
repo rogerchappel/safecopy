@@ -60,6 +60,13 @@ safecopy inspect --bundle ./my-project.safe.tgz
 `inspect --path ./my-project.safe.tgz` is an equivalent form. Run `safecopy
 help`, `safecopy --help`, or any command with `--help` to see accepted forms.
 
+Inspection validates `safecopy-manifest.json` before producing text or JSON.
+Malformed JSON and missing or wrong-typed manifest fields exit with an error
+that names the bundle, manifest, and failing field (for example,
+`totals.files must be a finite non-negative number`). This contract applies to
+both directory bundles and `.tgz` archives, so callers do not need to interpret
+JavaScript parser or property-access errors.
+
 ## What gets protected
 
 Built-in deny patterns skip common high-risk or noisy paths:
