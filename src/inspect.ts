@@ -31,7 +31,9 @@ function validateManifest(value: unknown, bundle: string): asserts value is Safe
   if (!isRecord(value)) return fail("manifest", "an object");
   if (value.schemaVersion !== 1) fail("schemaVersion", "1");
   if (value.tool !== "safecopy") fail("tool", '"safecopy"');
-  requireString(value.createdAt, "createdAt", fail);
+  const createdAt = value.createdAt;
+  if (typeof createdAt !== "string") return fail("createdAt", "a string");
+  if (Number.isNaN(Date.parse(createdAt))) fail("createdAt", "a valid timestamp");
   requireString(value.rootName, "rootName", fail);
   if (!Array.isArray(value.files)) return fail("files", "an array");
   value.files.forEach((entry, index) => validateFile(entry, `files[${index}]`, fail));
@@ -40,6 +42,20 @@ function validateManifest(value: unknown, bundle: string): asserts value is Safe
   if (!isRecord(value.totals)) return fail("totals", "an object");
   for (const field of ["files", "skipped", "bytes", "redactedFiles", "redactions"] as const) {
     requireNumber(value.totals[field], `totals.${field}`, fail);
+  }
+  const validated = value as unknown as SafeCopyManifest;
+  const expectedTotals = {
+    files: validated.files.length,
+    skipped: validated.skipped.length,
+    bytes: validated.files.reduce((sum, file) => sum + file.copiedBytes, 0),
+    redactedFiles: validated.files.filter((file) => file.redactions.length > 0).length,
+    redactions: validated.files.reduce((sum, file) => sum + file.redactions.reduce((count, hit) => count + hit.count, 0), 0)
+  };
+  for (const field of ["files", "skipped", "bytes", "redactedFiles", "redactions"] as const) {
+    if (validated.totals[field] !== expectedTotals[field]) {
+      const source = field === "skipped" ? "skipped" : "files";
+      fail(`totals.${field}`, `equal ${expectedTotals[field]} derived from ${source}`);
+    }
   }
 }
 
