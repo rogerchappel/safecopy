@@ -67,6 +67,11 @@ that names the bundle, manifest, and failing field (for example,
 both directory bundles and `.tgz` archives, so callers do not need to interpret
 JavaScript parser or property-access errors.
 
+Inspection also validates manifest semantics: `createdAt` must be a parseable
+timestamp, and every `totals` value must match the validated `files`, `skipped`,
+copied-byte, and redaction entries. Inconsistent bundles fail before text or
+JSON output with an error naming the mismatched total and its derived value.
+
 ## What gets protected
 
 Built-in deny patterns skip common high-risk or noisy paths:
