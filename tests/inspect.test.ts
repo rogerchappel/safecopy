@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { inspectBundle, summarizeManifest } from "../src/inspect.js";
+
+const cliPath = fileURLToPath(new URL("../src/cli.js", import.meta.url));
 
 function withBundle(manifest: string, callback: (directory: string, archive: string) => void): void {
   const tmp = mkdtempSync(join(tmpdir(), "safecopy-inspect-"));
@@ -61,6 +64,32 @@ test("inspect reports incomplete and wrong-typed nested fields", () => {
     withBundle(JSON.stringify(manifest), (directory, archive) => {
       for (const bundle of [directory, archive]) {
         assert.throws(() => inspectBundle(bundle), new RegExp(`Invalid safecopy-manifest\\.json in bundle ${bundle}: ${expected}`));
+      }
+    });
+  }
+});
+
+test("inspect rejects malformed timestamps and inconsistent totals for directories and archives", () => {
+  const cases: Array<[string, unknown, string]> = [
+    ["createdAt", { ...validManifest, createdAt: "not-a-date" }, "createdAt must be a valid timestamp"],
+    ["files", { ...validManifest, totals: { ...validManifest.totals, files: 2 } }, "totals.files must be equal 1 derived from files"],
+    ["skipped", { ...validManifest, totals: { ...validManifest.totals, skipped: 2 } }, "totals.skipped must be equal 1 derived from skipped"],
+    ["bytes", { ...validManifest, totals: { ...validManifest.totals, bytes: 5 } }, "totals.bytes must be equal 4 derived from files"],
+    ["redactedFiles", { ...validManifest, totals: { ...validManifest.totals, redactedFiles: 0 } }, "totals.redactedFiles must be equal 1 derived from files"],
+    ["redactions", { ...validManifest, totals: { ...validManifest.totals, redactions: 2 } }, "totals.redactions must be equal 1 derived from files"]
+  ];
+
+  for (const [name, manifest, expected] of cases) {
+    withBundle(JSON.stringify(manifest), (directory, archive) => {
+      for (const bundle of [directory, archive]) {
+        assert.throws(() => inspectBundle(bundle), new RegExp(expected), `${name}: ${bundle}`);
+        const result = spawnSync(process.execPath, [cliPath, "inspect", "--bundle", bundle, "--json"], {
+          cwd: dirname(bundle),
+          encoding: "utf8"
+        });
+        assert.equal(result.status, 1, `${name}: ${bundle}`);
+        assert.match(result.stderr, new RegExp(expected));
+        assert.equal(result.stdout, "");
       }
     });
   }
